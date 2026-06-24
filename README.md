@@ -1,0 +1,2 @@
+# Quantitative-Soft-Tissue-Analysis-in-Medical-Imaging
+Automated body composition pipeline for DIXON MRI data (L3 level).Automated body composition pipeline for DIXON MRI data (L3 level). Extracts SAT, VAT &amp; skeletal muscle metrics using VIBESegmentator + 3D Slicer. Interactive Panel dashboard with percentile comparison, clinical report (DE/EN) and PDF export. Bachelor's thesis – ZHAW × KSW, 2026 
