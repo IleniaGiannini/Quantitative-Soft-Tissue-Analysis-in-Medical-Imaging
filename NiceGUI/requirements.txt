@@ -1,0 +1,6 @@
+nicegui
+numpy
+matplotlib
+pynrrd
+reportlab
+pdfplumber
