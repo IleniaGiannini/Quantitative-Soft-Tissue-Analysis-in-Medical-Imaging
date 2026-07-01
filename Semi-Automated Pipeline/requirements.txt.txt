@@ -1,0 +1,8 @@
+panel==1.9.0
+pandas
+numpy
+matplotlib
+scipy
+nibabel
+pynrrd
+PyMuPDF
