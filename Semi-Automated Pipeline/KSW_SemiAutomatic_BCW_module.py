@@ -158,7 +158,6 @@ class KSW_SemiAutomatic_BCW_moduleWidget(ScriptedLoadableModuleWidget):
                     border: none;
                     padding: 0px 4px 8px 4px;
                     margin: 0px;
-                    color: #d6d6d6;
                     font-size: 12px;
                 }
             """)
@@ -186,7 +185,7 @@ class KSW_SemiAutomatic_BCW_moduleWidget(ScriptedLoadableModuleWidget):
         <h2 style='color:#1f4e99; margin-bottom:2px;'>
         KSW Semi-automatic Body Composition Workflow
         </h2>
-        <p style='color:#333333;'>
+        <p>
         Semi-automatic MRI segmentation for SAT, VAT and muscle,
         including quantitative metric extraction.
         </p>
@@ -419,7 +418,7 @@ class KSW_SemiAutomatic_BCW_moduleWidget(ScriptedLoadableModuleWidget):
         self.imatThresholdMaxSpinBox.setToolTip("Upper IMAT threshold on the fat image")
 
         recommendedIMATLabel = qt.QLabel("Recommended: 53-233")
-        recommendedIMATLabel.setStyleSheet("color: #d6d6d6; font-size: 12px; padding-left: 8px;")
+        recommendedIMATLabel.setStyleSheet("font-size: 12px; padding-left: 8px;")
 
         imatThresholdLayout.addWidget(qt.QLabel("Min:"))
         imatThresholdLayout.addWidget(self.imatThresholdMinSpinBox)
@@ -1045,21 +1044,25 @@ class KSW_SemiAutomatic_BCW_moduleWidget(ScriptedLoadableModuleWidget):
         metrics["water_slice_index"] = dashboardSliceIndex
         metrics["fat_slice_index"] = dashboardSliceIndex
 
-        for filename in ["slice_index.txt", "dashboard_start_slice.txt"]:
-            path = os.path.join(outputDir, filename)
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(str(dashboardSliceIndex))
+        sliceIndexPath = os.path.join(outputDir, "dashboard_start_slice.txt")
 
-        print(f"[Dashboard export] Final dashboard start slice written: {dashboardSliceIndex}")
+        with open(sliceIndexPath, "w", encoding="utf-8") as f:
+            f.write(str(dashboardSliceIndex))
 
-        # Read back immediately for debugging.
-        for filename in ["slice_index.txt", "dashboard_start_slice.txt"]:
-            path = os.path.join(outputDir, filename)
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    print(f"[Dashboard export check] {filename} = {f.read().strip()}")
-            except Exception as e:
-                print(f"[Dashboard export check] Could not read {filename}: {e}")
+        print(
+            f"[Dashboard export] Final dashboard start slice written: "
+            f"{dashboardSliceIndex}"
+        )
+
+        try:
+            with open(sliceIndexPath, "r", encoding="utf-8") as f:
+                print(
+                    f"[Dashboard export check] dashboard_start_slice.txt = "
+                    f"{f.read().strip()}"
+                )
+        except Exception as e:
+            print(f"[Dashboard export check] Could not read slice index: {e}")
+
         print(
             f"[Dashboard export] workflow slice index: {workflowSliceIndex}, "
             f"source slice index: {exportSourceSliceIndex}, "
@@ -2101,30 +2104,30 @@ class KSW_SemiAutomatic_BCW_moduleLogic(ScriptedLoadableModuleLogic):
             )
 
         # Read the slice written during export.
-        # Prefer dashboard_start_slice.txt because it is written directly for launching.
-        sliceIndex = None
+        sliceIndexPath = os.path.join(outputDir, "dashboard_start_slice.txt")
+        sliceIndex = 0
 
-        for filename in ["dashboard_start_slice.txt", "slice_index.txt"]:
-            sliceIndexPath = os.path.join(outputDir, filename)
+        if os.path.exists(sliceIndexPath):
+            try:
+                with open(sliceIndexPath, "r", encoding="utf-8") as f:
+                    sliceIndex = int(f.read().strip())
 
-            if os.path.exists(sliceIndexPath):
-                try:
-                    with open(sliceIndexPath, "r", encoding="utf-8") as f:
-                        sliceIndex = int(f.read().strip())
-                    print(f"[Dashboard launch] Using {filename}: z={sliceIndex}")
-                    break
-                except Exception as e:
-                    print(f"[Dashboard launch] Could not read {filename}: {e}")
+                print(
+                    f"[Dashboard launch] Using dashboard_start_slice.txt: "
+                    f"z={sliceIndex}"
+                )
 
-        if sliceIndex is None:
-            sliceIndex = 0
-            print("[Dashboard launch] No slice index file found. Falling back to z=0.")
+            except Exception as e:
+                print(
+                    f"[Dashboard launch] Could not read dashboard_start_slice.txt: {e}"
+                )
+                print("[Dashboard launch] Falling back to z=0.")
 
-        # Synchronise both files again directly before launching.
-        for filename in ["slice_index.txt", "dashboard_start_slice.txt"]:
-            path = os.path.join(outputDir, filename)
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(str(sliceIndex))
+        else:
+            print(
+                "[Dashboard launch] dashboard_start_slice.txt not found. "
+                "Falling back to z=0."
+            )
 
         env = os.environ.copy()
         env.pop("PYTHONHOME", None)
